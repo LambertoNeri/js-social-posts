@@ -91,8 +91,8 @@ for (let i = 0; i < posts.length; i++) {
     `);
 
     const likeButton = document.querySelectorAll('.like-button');
-    const innerLikes = this.document.querySelector('.likes__counter');
-    
+    const innerLikes = document.querySelector('.likes__counter');
+    //non so come far salire il mi piace del post //
     for (let i = 0; i < likeButton.length; i++) {
         const button = likeButton[i];
        
