@@ -1,3 +1,4 @@
+const likedPosts = [];
 const posts = [
     {
         "id": 1,
@@ -38,7 +39,7 @@ const posts = [
         "media": "https://unsplash.it/600/400?image=24",
         "author": {
             "name": "Luca Formicola",
-            "image": "https://unsplash.it/600/400?image=27"    /* ao LF  */
+            "image": null    /* ao LF  */
         },
         "likes": 56,
         "created": "2021-04-03"
@@ -55,70 +56,105 @@ const posts = [
         "created": "2021-03-05"
     }
 ];
-const container = document.querySelector('#container');
-for (let i = 0; i < posts.length; i++) {
-    container.innerHTML += (`
+
+const eleContainer = document.querySelector('#container');
+renderPosts(posts, eleContainer);
+
+
+function renderPosts(arrPosts, eleContainer){
+    eleContainer.innerHTML = arrPosts.reduce((postsHtml, objPost) => postsHtml + generatePostHtml(objPost), '');
+
+    const listLikeButtons = eleContainer.querySelectorAll('.like-button')
+    listLikeButtons.forEach(likeButton => likeButton.addEventListener('click', manageLike)) ;
+        
+};
+
+
+function generatePostHtml(objPost) { 
+    return `
         <div class="post">
             <div class="post__header">
                 <div class="post-meta">                    
                     <div class="post-meta__icon">
-                        <img class="profile-pic" src="${posts[i].author.image}" alt="${posts[i].author.name}">                    
+                    ${
+                        objPost.author.image ?
+                            '<img class="profile-pic" src="' + objPost.author.image + '" alt="' + objPost.author.name + '">' :
+                            getNameInitials(objPost.author.name)
+                    }                
                     </div>
                     <div class="post-meta__data">
-                        <div class="post-meta__author">${posts[i].author.name}</div>
-                        <div class="post-meta__time">${posts[i].created}</div>
+                        <div class="post-meta__author">${objPost.author.name}</div>
+                        <div class="post-meta__time">${formatIsoToItalianDate(objPost.created)}</div>
                     </div>                    
                 </div>
             </div>
-            <div class="post__text">${posts[i].content}</div>
+            <div class="post__text">${objPost.content}</div>
             <div class="post__image">
-                <img src="${posts[i].media}" alt="">
+                <img src="${objPost.media}" alt="">
             </div>
             <div class="post__footer">
                 <div class="likes js-likes">
                     <div class="likes__cta">
-                        <a class="like-button js-like-button" href="!#" data-postid="${posts[i].id}">
+                        <a class="like-button ${manageClassLike(objPost)} js-like-button" data-postid="${objPost.id}">
                             <i class="like-button__icon fas fa-thumbs-up" aria-hidden="true"></i>
                             <span class="like-button__label">Mi Piace</span>
                         </a>
                     </div>
                     <div class="likes__counter">
-                        Piace a <b id="like-counter-${posts[i].likes}" class="js-likes-counter">${posts[i].likes}</b> persone
+                        Piace a <b id="like-counter-${objPost.id}" class="js-likes-counter">${objPost.likes}</b> persone
                     </div>
                 </div> 
             </div>            
         </div>
-    `);
+    `;
+}
 
-    const likeButton = document.querySelectorAll('.like-button');
-    const innerLikes = document.querySelector('.likes__counter');
-    //non so come far salire il mi piace del post //
-    for (let i = 0; i < likeButton.length; i++) {
-        const button = likeButton[i];
-       
+function manageLike() {
+    //vedere se il post ha gia il like
+    const postId = parseInt(this.dataset.postid)
 
-
-        button.addEventListener('click',   
-        function colorButton(event) {
-            
-            event.preventDefault ();
-            this.classList.toggle('clicked');
-            console.log('il tuo ID è', posts[i].id);
-
-            if (likeButton[i].classList.contains('clicked')){
-                posts[i].likes += 1;
-                console.log ('quanti likes ho? (plus)', posts[i].likes);
-                innerLikes.innerHTML = (`Piace a <b id="like-counter-1" class="js-likes-counter">${posts[i].likes}</b> persone`);
-            }else{
-                posts[i].likes -= 1;
-                console.log ('quanti likes ho? (minus)', posts[i].likes);
-                innerLikes.innerHTML = (`Piace a <b id="like-counter-1" class="js-likes-counter">${posts[i].likes}</b> persone`);
-            };
-        });
+    let variation;
+    if (likedPosts.includes(postId)) {
+        //se ha il like bisogna toglierlo (quindi decrementare il numero di likes nell'oggetto che rappresenta il post)
+        const indexPost = likedPosts.indexOf(postId);
+        likedPosts.splice(indexPost, 1)
+        //aggiornare l'interfaccia 
+        variation = -1
+    } else {
+        // altrimenti aggiungere il like (quindi incrementare il numero di likes nell'oggetto che rappresenta il post)
+        likedPosts.push(postId)
+        variation = 1
     }
 
-    
-};
+    const objPost = posts.find(post => post.id == postId)
+    objPost.likes += variation;
+
+
+    console.log(likedPosts);
+
+    renderPosts(posts, eleContainer)
+}
+
+function manageClassLike(objPost) {
+  return likedPosts.includes(objPost.id) ? 'like-button--liked' : '';
+}
+
+function formatIsoToItalianDate(isoString) {
+    return isoString.split('-').reverse().join('/')
+}
+
+function getNameInitials(name) {
+    //Pinco Rossi -------> PR
+   return name.split(' ').reduce((initials, namePart) => initials + namePart[0].toUpperCase(), '')
+}
 
 
 
+
+// TODO
+// aggiungere la classe al bottone like
+//formattare le date
+//gestire l'immagine del profilo se manca
+
+
+// 2021-06-25 -------> 25/06/2021
